@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm run build:tests && node scripts/fix-esm-specifiers.mjs && node --test --experimental-specifier-resolution=node .tests-dist/tests",
+    "build:tests": "tsc -p tsconfig.tests.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tests-dist",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "declaration": false,
+    "sourceMap": false,
+    "allowJs": false,
+    "allowImportingTsExtensions": false
+  },
+  "include": [
+    "src/config/httpClient.ts",
+    "src/services/**/*.ts",
+    "src/store/**/*.ts",
+    "src/store/**/*.tsx",
+    "src/types/**/*.ts",
+    "src/types/node.d.ts",
+    "tests/**/*.ts"
+  ]
+}
