@@ -2,7 +2,6 @@
 
 declare namespace ImportMeta {
   interface Env {
-    readonly VITE_API_URL?: string
-    readonly VITE_AUTH_REFRESH_PATH?: string
+    readonly VITE_API_BASE_URL?: string
   }
 }

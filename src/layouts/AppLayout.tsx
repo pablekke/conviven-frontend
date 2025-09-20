@@ -1,48 +1,41 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 
 import { useNotifications } from '../providers/notifications/notificationContext'
 import { useLocalization } from '../providers/localization/localizationContext'
 import { useTheme } from '../providers/theme/themeContext'
-import { useAuthTokens, useUserInfo } from '../features/auth/hooks'
-import { useLogoutMutation, useProfileQuery } from '../features/auth/authApi'
-import { useAppDispatch } from '../app/hooks'
-import { updateUserInfo } from '../features/auth/authSlice'
+import { useAuth } from '../store/AuthStore'
 
 const baseLinkClass =
   'inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-primary transition-colors duration-150 hover:bg-slate-200/50'
 
 export function AppLayout() {
-  const dispatch = useAppDispatch()
   const { translate, locale, setLocale } = useLocalization()
   const { theme, toggleTheme } = useTheme()
   const { notify } = useNotifications()
-  const tokens = useAuthTokens()
-  const user = useUserInfo()
+  const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
-  const [logout, { isLoading }] = useLogoutMutation()
-  const { data: profileData } = useProfileQuery(undefined, {
-    skip: !tokens?.accessToken,
-  })
-
-  useEffect(() => {
-    if (profileData) {
-      dispatch(updateUserInfo(profileData))
-    }
-  }, [dispatch, profileData])
 
   const initials = useMemo(() => {
-    if (!user?.fullName) return '??'
-    return user.fullName
+    if (currentUser?.name) {
+      return currentUser.name
       .split(' ')
       .map((part) => part.charAt(0).toUpperCase())
       .slice(0, 2)
       .join('')
-  }, [user?.fullName])
+    }
+    if (currentUser?.email) {
+      return currentUser.email
+        .split('@')[0]
+        .slice(0, 2)
+        .toUpperCase()
+    }
+    return '??'
+  }, [currentUser])
 
   const handleLogout = async () => {
     try {
-      await logout().unwrap()
+      logout()
       notify({ type: 'info', title: translate('navigation.logout') })
       navigate('/login')
     } catch (error) {
@@ -111,9 +104,9 @@ export function AppLayout() {
           <div className="flex items-center gap-4">
             <div className="flex flex-col text-right">
               <span className="text-sm font-semibold text-primary">
-                {user?.fullName ?? 'Anon'}
+                {currentUser?.name ?? 'Anon'}
               </span>
-              <span className="text-xs text-secondary">{user?.email}</span>
+              <span className="text-xs text-secondary">{currentUser?.email}</span>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
               {initials}
@@ -121,7 +114,6 @@ export function AppLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              disabled={isLoading}
               className="rounded-lg border border-base bg-surface px-3 py-1 text-sm font-medium text-secondary hover:text-primary disabled:opacity-60"
             >
               {translate('navigation.logout')}

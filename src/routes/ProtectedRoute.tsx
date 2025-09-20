@@ -1,16 +1,24 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
-import { useIsAuthenticated } from '../features/auth/hooks'
+import { useAuth } from '../store/AuthStore'
 
 interface ProtectedRouteProps {
   redirectPath?: string
 }
 
 export function ProtectedRoute({ redirectPath = '/login' }: ProtectedRouteProps) {
-  const isAuthenticated = useIsAuthenticated()
+  const { status } = useAuth()
   const location = useLocation()
 
-  if (!isAuthenticated) {
+  if (status === 'authenticating') {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center text-sm text-secondary">
+        Verificando sesión...
+      </div>
+    )
+  }
+
+  if (status !== 'authenticated') {
     return <Navigate to={redirectPath} replace state={{ from: location }} />
   }
 

@@ -1,69 +1,57 @@
-# React + TypeScript + Vite
+# Conviven Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Esta aplicación React + TypeScript implementa la primera iteración del flujo de autenticación contra el backend de Conviven.
 
-Currently, two official plugins are available:
+## Requisitos previos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 20 o superior
+- npm 10
 
-## Expanding the ESLint configuration
+## Configuración
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Instala las dependencias del proyecto:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   ```bash
+   npm install
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. Crea un archivo `.env` en la raíz del proyecto con la URL base del backend:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+   ```bash
+   VITE_API_BASE_URL=http://localhost:4000
+   ```
+
+   El cliente HTTP compone automáticamente las rutas usando `VITE_API_BASE_URL + '/api'`.
+
+3. Inicia el servidor de desarrollo:
+
+   ```bash
+   npm run dev
+   ```
+
+   La aplicación queda disponible en `http://localhost:5173`.
+
+## Pruebas
+
+Ejecuta los tests unitarios (compilan los archivos necesarios a `.tests-dist` y utilizan el runner nativo de Node):
+
+```bash
+npm test
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Endpoints utilizados
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+El frontend consume los siguientes endpoints del backend Conviven:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `POST /auth/login` — autentica al usuario y devuelve `{ accessToken, refreshToken }`.
+- `POST /auth/refresh` — renueva los tokens usando `{ refreshToken }`.
+- `GET /users/me` — obtiene el usuario asociado al `accessToken` activo.
+- `GET /health` — comprobación manual opcional del estado del backend (sin prefijo `/api`).
+
+## Estructura relevante
+
+- `src/config/httpClient.ts`: cliente HTTP con soporte para refresh automático y expulsión de sesión.
+- `src/services/authService.ts`: login, refresh, almacenamiento de tokens en memoria y `localStorage`.
+- `src/store/AuthStore.tsx`: contexto React que expone `useAuth()` para acceder al estado de autenticación.
+- `src/pages/LoginPage.tsx` / `src/pages/DashboardPage.tsx`: páginas principales de la iteración.
+- `docs/integration-notes.md`: notas sobre el flujo implementado y tareas pendientes.
