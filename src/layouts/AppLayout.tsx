@@ -1,55 +1,52 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useMemo } from 'react'
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 
-import { useNotifications } from '../providers/notifications/notificationContext'
-import { useLocalization } from '../providers/localization/localizationContext'
-import { useTheme } from '../providers/theme/themeContext'
-import { useAuth } from '../store/AuthStore'
+import { useNotifications } from "../providers/notifications/notificationContext";
+import { useLocalization } from "../providers/localization/localizationContext";
+import { useTheme } from "../providers/theme/themeContext";
+import { useAuth } from "../store/authContext";
 
 const baseLinkClass =
-  'inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-primary transition-colors duration-150 hover:bg-slate-200/50'
+  "inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-primary transition-colors duration-150 hover:bg-slate-200/50";
 
 export function AppLayout() {
-  const { translate, locale, setLocale } = useLocalization()
-  const { theme, toggleTheme } = useTheme()
-  const { notify } = useNotifications()
-  const { currentUser, logout } = useAuth()
-  const navigate = useNavigate()
+  const { translate, locale, setLocale } = useLocalization();
+  const { theme, toggleTheme } = useTheme();
+  const { notify } = useNotifications();
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   const initials = useMemo(() => {
     if (currentUser?.name) {
       return currentUser.name
-      .split(' ')
-      .map((part) => part.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('')
+        .split(" ")
+        .map((part: string) => part.charAt(0).toUpperCase())
+        .slice(0, 2)
+        .join("");
     }
     if (currentUser?.email) {
-      return currentUser.email
-        .split('@')[0]
-        .slice(0, 2)
-        .toUpperCase()
+      return currentUser.email.split("@")[0].slice(0, 2).toUpperCase();
     }
-    return '??'
-  }, [currentUser])
+    return "??";
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {
-      logout()
-      notify({ type: 'info', title: translate('navigation.logout') })
-      navigate('/login')
+      logout();
+      notify({ type: "info", title: translate("navigation.logout") });
+      navigate("/login");
     } catch (error) {
-      console.error('Logout failed', error)
+      console.error("Logout failed", error);
       notify({
-        type: 'error',
-        title: translate('errors.unknown'),
-      })
+        type: "error",
+        title: translate("errors.unknown"),
+      });
     }
-  }
+  };
 
   const switchLocale = () => {
-    setLocale(locale === 'es' ? 'en' : 'es')
-  }
+    setLocale(locale === "es" ? "en" : "es");
+  };
 
   return (
     <div className="flex min-h-screen bg-surface text-primary">
@@ -57,7 +54,7 @@ export function AppLayout() {
         <div className="mb-8">
           <span className="text-lg font-semibold text-primary">Conviven</span>
           <p className="mt-1 text-sm text-secondary">
-            {translate('dashboard.description')}
+            {translate("dashboard.description")}
           </p>
         </div>
         <nav className="space-y-2">
@@ -69,7 +66,7 @@ export function AppLayout() {
                 : baseLinkClass
             }
           >
-            {translate('navigation.dashboard')}
+            {translate("navigation.dashboard")}
           </NavLink>
           <NavLink
             to="/queues"
@@ -79,7 +76,7 @@ export function AppLayout() {
                 : baseLinkClass
             }
           >
-            {translate('navigation.queues')}
+            {translate("navigation.queues")}
           </NavLink>
         </nav>
       </aside>
@@ -98,15 +95,18 @@ export function AppLayout() {
               onClick={toggleTheme}
               className="rounded-lg border border-base bg-surface px-3 py-1 text-sm font-medium text-secondary hover:text-primary"
             >
-              {translate('navigation.toggleTheme')} · {theme === 'light' ? '☀️' : '🌙'}
+              {translate("navigation.toggleTheme")} ·{" "}
+              {theme === "light" ? "☀️" : "🌙"}
             </button>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex flex-col text-right">
               <span className="text-sm font-semibold text-primary">
-                {currentUser?.name ?? 'Anon'}
+                {currentUser?.name ?? "Anon"}
               </span>
-              <span className="text-xs text-secondary">{currentUser?.email}</span>
+              <span className="text-xs text-secondary">
+                {currentUser?.email}
+              </span>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
               {initials}
@@ -116,7 +116,7 @@ export function AppLayout() {
               onClick={handleLogout}
               className="rounded-lg border border-base bg-surface px-3 py-1 text-sm font-medium text-secondary hover:text-primary disabled:opacity-60"
             >
-              {translate('navigation.logout')}
+              {translate("navigation.logout")}
             </button>
           </div>
         </header>
@@ -127,5 +127,5 @@ export function AppLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

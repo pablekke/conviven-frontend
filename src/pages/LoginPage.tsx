@@ -1,116 +1,131 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, type Location } from 'react-router-dom'
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, type Location } from "react-router-dom";
 
-import { useAuth } from '../store/AuthStore'
-import { HttpError } from '../config/httpClient'
+import { useAuth } from "../store/authContext";
+import { HttpError } from "../config/httpClient";
 
 interface FormState {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 interface FormErrors {
-  email?: string
-  password?: string
+  email?: string;
+  password?: string;
 }
 
 function validateForm(values: FormState): FormErrors {
-  const errors: FormErrors = {}
+  const errors: FormErrors = {};
 
   if (!values.email.trim()) {
-    errors.email = 'El email es obligatorio'
+    errors.email = "El email es obligatorio";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-    errors.email = 'Ingresa un email válido'
+    errors.email = "Ingresa un email válido";
   }
 
   if (!values.password.trim()) {
-    errors.password = 'La contraseña es obligatoria'
+    errors.password = "La contraseña es obligatoria";
   } else if (values.password.length < 6) {
-    errors.password = 'La contraseña debe tener al menos 6 caracteres'
+    errors.password = "La contraseña debe tener al menos 6 caracteres";
   }
 
-  return errors
+  return errors;
 }
 
 function getServerErrorMessage(error: unknown): string {
   if (error instanceof HttpError) {
-    return error.payload?.message ?? 'No se pudo iniciar sesión'
+    return error.payload?.message ?? "No se pudo iniciar sesión";
   }
   if (error instanceof Error) {
-    return error.message
+    return error.message;
   }
   if (
     error &&
-    typeof error === 'object' &&
-    'payload' in (error as Record<string, unknown>) &&
-    typeof (error as { payload?: { message?: unknown } }).payload?.message === 'string'
+    typeof error === "object" &&
+    "payload" in (error as Record<string, unknown>) &&
+    typeof (error as { payload?: { message?: unknown } }).payload?.message ===
+      "string"
   ) {
-    return String((error as { payload?: { message?: unknown } }).payload?.message)
+    return String(
+      (error as { payload?: { message?: unknown } }).payload?.message
+    );
   }
-  return 'No se pudo iniciar sesión'
+  return "No se pudo iniciar sesión";
 }
 
 export function LoginPage() {
-  const { status, login, error: authError } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [formValues, setFormValues] = useState<FormState>({ email: '', password: '' })
-  const [formErrors, setFormErrors] = useState<FormErrors>({})
-  const [serverError, setServerError] = useState<string | null>(null)
+  const { status, login, error: authError } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [formValues, setFormValues] = useState<FormState>({
+    email: "",
+    password: "",
+  });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const isAuthenticating = status === 'authenticating'
-  const isAuthenticated = status === 'authenticated'
+  const isAuthenticating = status === "authenticating";
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     if (isAuthenticated) {
-      const redirectPath = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard'
-      navigate(redirectPath, { replace: true })
+      const redirectPath =
+        (location.state as { from?: Location })?.from?.pathname ?? "/dashboard";
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, location.state, navigate])
+  }, [isAuthenticated, location.state, navigate]);
 
   useEffect(() => {
     if (authError) {
-      setServerError(authError)
+      setServerError(authError);
     }
-  }, [authError])
+  }, [authError]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setServerError(null)
+    event.preventDefault();
+    setServerError(null);
 
-    const errors = validateForm(formValues)
-    setFormErrors(errors)
+    const errors = validateForm(formValues);
+    setFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      return
+      return;
     }
 
     try {
-      await login({ email: formValues.email.trim(), password: formValues.password })
+      await login({
+        email: formValues.email.trim(),
+        password: formValues.password,
+      });
     } catch (error) {
-      const message = getServerErrorMessage(error)
-      setServerError(message)
+      const message = getServerErrorMessage(error);
+      setServerError(message);
     }
-  }
+  };
 
   const buttonLabel = useMemo(() => {
     if (isAuthenticating) {
-      return 'Iniciando sesión...'
+      return "Iniciando sesión...";
     }
-    return 'Ingresar'
-  }, [isAuthenticating])
+    return "Ingresar";
+  }, [isAuthenticating]);
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit} noValidate>
       <header className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold text-primary">Bienvenido a Conviven</h1>
+        <h1 className="text-2xl font-semibold text-primary">
+          Bienvenido a Conviven
+        </h1>
         <p className="text-sm text-secondary">
           Inicia sesión con tu correo electrónico para continuar
         </p>
       </header>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-secondary" htmlFor="email">
+        <label
+          className="block text-sm font-medium text-secondary"
+          htmlFor="email"
+        >
           Correo electrónico
         </label>
         <input
@@ -121,15 +136,23 @@ export function LoginPage() {
           placeholder="usuario@conviven.com"
           value={formValues.email}
           onChange={(event) => {
-            setFormValues((current) => ({ ...current, email: event.target.value }))
+            setFormValues((current) => ({
+              ...current,
+              email: event.target.value,
+            }));
           }}
           disabled={isAuthenticating}
         />
-        {formErrors.email && <p className="text-sm text-red-500">{formErrors.email}</p>}
+        {formErrors.email && (
+          <p className="text-sm text-red-500">{formErrors.email}</p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-secondary" htmlFor="password">
+        <label
+          className="block text-sm font-medium text-secondary"
+          htmlFor="password"
+        >
           Contraseña
         </label>
         <input
@@ -139,15 +162,22 @@ export function LoginPage() {
           className="w-full rounded-lg border border-base bg-surface px-3 py-2 text-sm text-primary outline-none transition focus:border-blue-500"
           value={formValues.password}
           onChange={(event) => {
-            setFormValues((current) => ({ ...current, password: event.target.value }))
+            setFormValues((current) => ({
+              ...current,
+              password: event.target.value,
+            }));
           }}
           disabled={isAuthenticating}
         />
-        {formErrors.password && <p className="text-sm text-red-500">{formErrors.password}</p>}
+        {formErrors.password && (
+          <p className="text-sm text-red-500">{formErrors.password}</p>
+        )}
       </div>
 
       {serverError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{serverError}</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          {serverError}
+        </p>
       )}
 
       <button
@@ -158,5 +188,5 @@ export function LoginPage() {
         {buttonLabel}
       </button>
     </form>
-  )
+  );
 }

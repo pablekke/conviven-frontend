@@ -1,48 +1,49 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
-} from 'react'
+} from "react";
 
-import type { LoginRequest } from '../types/api/auth'
-import type { User } from '../types/models/user'
-import { AuthStateManager, type AuthSnapshot } from './authStateManager'
+import type { LoginRequest } from "../types/api/auth";
+import { AuthStateManager, type AuthSnapshot } from "./authStateManager";
+import { AuthContext, type AuthContextValue } from "./authContext";
 
-interface AuthContextValue extends AuthSnapshot {
-  login: (credentials: LoginRequest) => Promise<User>
-  logout: () => void
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+// Context y hook movidos a src/store/authContext.ts para cumplir con Fast Refresh
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const managerRef = useRef<AuthStateManager | null>(null)
-
-  if (!managerRef.current) {
-    managerRef.current = new AuthStateManager()
-  }
-
-  const manager = managerRef.current!
-  const [snapshot, setSnapshot] = useState<AuthSnapshot>(manager.getState())
+  const managerRef = useRef<AuthStateManager | null>(null);
+  const [snapshot, setSnapshot] = useState<AuthSnapshot>(() => {
+    const instance = new AuthStateManager();
+    managerRef.current = instance;
+    return instance.getState();
+  });
 
   useEffect(() => {
-    const unsubscribe = manager.subscribe(setSnapshot)
-    return unsubscribe
-  }, [manager])
+    // Crear y suscribir en un único ciclo; limpiar siempre dispone la instancia usada.
+    const instance = managerRef.current ?? new AuthStateManager();
+    managerRef.current = instance;
+    const unsubscribe = instance.subscribe(setSnapshot);
 
-  useEffect(() => {
     return () => {
-      manager.dispose()
-    }
-  }, [manager])
+      unsubscribe();
+      instance.dispose();
+      managerRef.current = null;
+    };
+  }, []);
 
-  const login = useCallback((credentials: LoginRequest) => manager.login(credentials), [manager])
-  const logout = useCallback(() => manager.logout(), [manager])
+  const login = useCallback((credentials: LoginRequest) => {
+    const instance = managerRef.current ?? new AuthStateManager();
+    managerRef.current = instance;
+    return instance.login(credentials);
+  }, []);
+
+  const logout = useCallback(() => {
+    const instance = managerRef.current;
+    if (instance) instance.logout();
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -50,18 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
     }),
-    [login, logout, snapshot],
-  )
+    [login, logout, snapshot]
+  );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
-
-export type { AuthStatus } from './authStateManager'
+export type { AuthStatus } from "./authStateManager";
